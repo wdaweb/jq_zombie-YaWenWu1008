@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZOMBIE SHOT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@100;300;400;500;700;800;900&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-image: url(./IMAGES/bg.jpg);
+      background-repeat: no-repeat;
+      background-size: cover;
+      font-family: 'M PLUS 1p', sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      padding: 20px;
+      height: 100vh;
+      /* background: #f99999; */
+      width: 100%;
+    }
+
+    .btn {
+      text-align: center;
+      position: relative;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -100%);
+      z-index: 999;
+    }
+
+    .btn h1 {
+      color: white;
+      font-size: 24px;
+    }
+
+    .btn input {
+      width: 100px;
+      height: 80px;
+      background: #999;
+      color: antiquewhite;
+      font-size: 2rem;
+      border-radius: 1rem;
+    }
+
+    #btn-easy:active {
+      background: #669fb2;
+    }
+
+    #btn-easy:focus {
+      background: #669fb2;
+    }
+
+    #btn-medium:active {
+      background: #669fb2;
+    }
+
+    #btn-medium:focus {
+      background: #669fb2;
+    }
+
+    #btn-hard:active {
+      background: #669fb2;
+    }
+
+    #btn-hard:focus {
+      background: #669fb2;
+    }
+
+
+    #btn-start {
+      width: 200px;
+      height: 150px;
+      position: absolute;
+      left: 45%;
+    }
+
+
+
+    #game-container {
+      width: 1000px;
+      height: 800px;
+      background: rgba(0, 0, 0, 0.09);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      user-select: none;
+      -webkit-user-drag: none;
+      display: block;
+      margin: auto;
+    }
+
+
+
+    .score {
+      display: none;
+      background: rgba(0, 0, 0, 0.36);
+      font-size: 24px;
+      border: 1px solid #000;
+      width: 250px;
+      text-align: center;
+      color: rgb(55, 55, 55);
+      letter-spacing: 1rem;
+      float: right;
+    }
+
+    .line {
+      position: absolute;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      /* background-color: #000; */
+    }
+
+    .zombie {
+      width: 8%;
+      position: absolute;
+      top: -20px;
+    }
+
+    .zombie:hover {
+      cursor: pointer;
+    }
+
+    .swal2-icon-content {
+      font-family: 'M PLUS 1p', sans-serif;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="btn">
+      <h1>先選擇難度，再按開始</h1>
+      <br>
+      <input type="button" value="簡單" id="btn-easy">
+      <input type="button" value="中等" id="btn-medium">
+      <input type="button" value="困難" id="btn-hard">
+      <br> <br><br>
+      <input type="button" value="START" id="btn-start">
+    </div>
+    <div class="score">
+      <p>分數: <span id="text-score">0</span></p>
+      <p>剩餘: <span id="text-time">0</span>秒</p>
+    </div>
+
+    <div id="game-container">
+      <div class="line" style="left: 23%;"></div>
+      <div class="line" style="left: 50%;"></div>
+      <div class="line" style="left: 77%;"></div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    let audioElement
+    function playAudio() {
+      audioElement = new Audio('./music/偵探已瘋-Main-version.mp3')
+      audioElement.play()
+    }
+
+    $(document).ready(function () {
+      let speed = 3000
+
+      $('#btn-easy').click(function () {
+        speed = 5000
+      });
+
+      $('#btn-medium').click(function () {
+        speed = 3000
+      })
+
+      $('#btn-hard').click(function () {
+        speed = 1500
+      })
+
+      let score = 0
+      $('#btn-start').click(function () {
+        playAudio()
+        $('.btn').hide()
+        $('.score').show()
+        $(this).attr('disabled', true)
+        score = 0
+        $('#text-score').text(score)
+        let countdown = 20
+        $('#text-time').text(countdown)
+
+        let timer = setInterval(function () {
+          countdown--
+          $('#text-time').text(countdown)
+          creatZombie(score)
+          if (countdown === 0) {
+            clearInterval(timer)
+            if (audioElement) {
+              audioElement.pause()
+              audioElement.currentTime = 0
+            }
+            $('#game-container').html('')
+            $('#btn-start').attr('disabled', false)
+            Swal.fire({
+              icon: 'info',
+              title: 'GAME OVER!',
+              text: `你得了${score}分`
+            })
+          }
+        }, 1000)
+      })
+
+      function creatZombie() {
+        let gameContainer = $('#game-container')
+        let gameWidth = gameContainer.width()
+        let zombie = $(`<img src="./IMAGES/egg.png" class='zombie'>`)
+        let random = Math.floor(Math.random() * 3)
+        let lineLeft = Math.floor(gameWidth * (0.17 + (random * 0.33)))
+        zombie.css('left', lineLeft + 'px')
+        gameContainer.append(zombie)
+
+        zombie.animate({
+          top: gameContainer.height() + 'px'
+        }, {
+          duration: speed,
+          easing: 'linear',
+        }
+        )
+
+        zombie.click(function () {
+          $(this).remove()
+          score++
+          $('#text-score').text(score)
+        })
+
+
+
+      }
+    })
+  </script>
+</body>
+
+</html>
